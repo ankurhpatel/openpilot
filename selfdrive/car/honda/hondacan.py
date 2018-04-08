@@ -62,6 +62,16 @@ def create_gas_command(packer, gas_amount, idx):
 
   return packer.make_can_msg("GAS_COMMAND", 0, values, idx)
 
+def create_actuator_steering_control(steering_angle):
+  actuator_steer = steering_angle * 62.5
+  steer_string = "V100;WHEEL;0;POSITION;"+actuator_steer+";\n"
+  print steer_string
+  return [0,0,steer_string,8]
+
+def create_actuator_heartbeat(enabled):
+  alive_string = "V100;WHEEL;0;ENABLE;"+enabled+";\n"
+  print alive_string
+  return [0,0,alive_string,8]
 
 def create_steering_control(packer, apply_steer, car_fingerprint, idx):
   """Creates a CAN message for the Honda DBC STEERING_CONTROL."""
@@ -79,11 +89,11 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, idx):
   commands = []
 
   bus = 0
-  
+
   # CRV_5G sends commands to bus 2.
   if car_fingerprint in (CAR.CRV_5G):
     bus = 2
-  else:  
+  else:
     # TODO: Why is X4 always 0xc1? Not implemented yet in canpacker
     acc_hud_values = {
       'PCM_SPEED': pcm_speed * CV.MS_TO_KPH,
@@ -96,7 +106,7 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, idx):
       'SET_ME_X01': 0x01,
     }
     commands.append(packer.make_can_msg("ACC_HUD", 0, acc_hud_values, idx))
-  
+
   lkas_hud_values = {
     'SET_ME_X41': 0x41,
     'SET_ME_X48': 0x48,

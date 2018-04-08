@@ -143,6 +143,14 @@ class CarController(object):
     idx = frame % 4
     can_sends.append(hondacan.create_steering_control(self.packer, apply_steer, CS.CP.carFingerprint, idx))
 
+    # Send every 20ms / 50Hz, must be sent faster than 10Hz.
+    if (frame % 2) == 0:
+      # This command tells steering to engage or disengage, synced with
+      # controls_enabled.
+      can_sends.append(hondacan.create_actuator_heartbeat(enabled))
+      # Controls actuator steer.
+      can_sends.append(hondacan.create_actuator_control(actuators.steerAngle))
+
     # Send dashboard UI commands.
     if (frame % 10) == 0:
       idx = (frame/10) % 4

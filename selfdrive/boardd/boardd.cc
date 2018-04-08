@@ -142,6 +142,16 @@ bool usb_connect() {
   // power off ESP
   libusb_control_transfer(dev_handle, 0xc0, 0xd9, 0, 0, NULL, 0, TIMEOUT);
 
+  // set UART modes for serial control over LIN lines.
+  for (int uart = 2; uart <= 3; uart++) {
+    // 115200 baud
+    libusb_control_transfer(dev_handle, 0xc0, 0xe1, uart, 115200, NULL, 0, TIMEOUT);
+    // even parity
+    libusb_control_transfer(dev_handle, 0xc0, 0xe2, uart, 1, NULL, 0, TIMEOUT);
+    // callback 1
+    libusb_control_transfer(dev_handle, 0xc0, 0xe3, uart, 1, NULL, 0, TIMEOUT);
+  }
+
   // power on charging (may trigger a reconnection, should be okay)
   #ifndef __x86_64__
     libusb_control_transfer(dev_handle, 0xc0, 0xe6, 1, 0, NULL, 0, TIMEOUT);
@@ -572,7 +582,7 @@ void *pigeon_thread(void *crap) {
       //printf("got %d\n", len);
       alen += len;
     }
-    if (alen > 0) { 
+    if (alen > 0) {
       if (dat[0] == (char)0x00){
         LOGW("received invalid ublox message, resetting pigeon");
         pigeon_init();
