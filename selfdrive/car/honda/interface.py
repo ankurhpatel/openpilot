@@ -144,7 +144,10 @@ class CarInterface(object):
     ret.carName = "honda"
     ret.carFingerprint = candidate
 
-    ret.safetyModel = car.CarParams.SafetyModels.honda
+    if 0x1ef in fingerprint:
+      ret.safetyModel = car.CarParams.SafetyModels.hondaBosch
+    else:
+      ret.safetyModel = car.CarParams.SafetyModels.honda
 
     ret.enableSteer = True
     ret.enableBrake = True
@@ -181,6 +184,33 @@ class CarInterface(object):
       ret.longitudinalKpV = [3.6, 2.4, 1.5]
       ret.longitudinalKiBP = [0., 35.]
       ret.longitudinalKiV = [0.54, 0.36]
+    elif candidate == CAR.CIVIC_HATCH:
+      stop_and_go = True
+      ret.enableCamera = True
+      ret.mass = 2961./2.205 + std_cargo
+      ret.wheelbase = wheelbase_civic
+      ret.centerToFront = centerToFront_civic
+      ret.steerRatio = 13.0
+      ret.steerKpV, ret.steerKiV = [[0.8], [0.24]]
+
+      ret.longitudinalKpBP = [0., 5., 35.]
+      ret.longitudinalKpV = [1.2, 0.8, 0.5]
+      ret.longitudinalKiBP = [0., 35.]
+      ret.longitudinalKiV = [0.18, 0.12]
+    elif candidate == CAR.ACCORD:
+      stop_and_go = True
+      ret.enableCamera = True
+      ret.safetyParam = 1 # Informs fw that this car uses an alternate user brake msg
+      ret.mass = 3298./2.205 + std_cargo
+      ret.wheelbase = 2.67
+      ret.centerToFront = ret.wheelbase * 0.39
+      ret.steerRatio = 11.82
+      ret.steerKpV, ret.steerKiV = [[0.8], [0.24]]
+
+      ret.longitudinalKpBP = [0., 5., 35.]
+      ret.longitudinalKpV = [1.2, 0.8, 0.5]
+      ret.longitudinalKiBP = [0., 35.]
+      ret.longitudinalKiV = [0.18, 0.12]
     elif candidate == CAR.ACURA_ILX:
       stop_and_go = False
       ret.mass = 3095./2.205 + std_cargo
@@ -201,6 +231,20 @@ class CarInterface(object):
       ret.wheelbase = 2.62
       ret.centerToFront = ret.wheelbase * 0.41
       ret.steerRatio = 15.3
+      ret.steerKpV, ret.steerKiV = [[0.8], [0.24]]
+
+      ret.longitudinalKpBP = [0., 5., 35.]
+      ret.longitudinalKpV = [1.2, 0.8, 0.5]
+      ret.longitudinalKiBP = [0., 35.]
+      ret.longitudinalKiV = [0.18, 0.12]
+    elif candidate == CAR.CRV_5G:
+      stop_and_go = True
+      ret.enableCamera = True
+      ret.safetyParam = 1 # Informs fw that this car uses an alternate user brake msg
+      ret.mass = 3358./2.205 + std_cargo
+      ret.wheelbase = 2.67
+      ret.centerToFront = ret.wheelbase * 0.41
+      ret.steerRatio = 12.30
       ret.steerKpV, ret.steerKiV = [[0.8], [0.24]]
 
       ret.longitudinalKpBP = [0., 5., 35.]
