@@ -155,4 +155,4 @@ class CarState(object):
     self.gas_pressed = 0
     self.low_speed_lockout = 0
     self.brake_lights = bool(0)
-    self.generic_toggle = 0
+    self.generic_toggle = False
