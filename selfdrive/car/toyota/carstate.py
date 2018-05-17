@@ -151,7 +151,7 @@ class CarState(object):
 
     self.user_brake = 0
     self.v_cruise_pcm = 0
-    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENABLED']
+    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENAGED']
     self.gas_pressed = 0
     self.low_speed_lockout = 0
     self.brake_lights = 0
