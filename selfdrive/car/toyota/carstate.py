@@ -55,7 +55,7 @@ def get_can_parser(CP):
     ("STEER_ANGLE", "STEER_ANGLE_SENSOR", 0),
     ("STEER_FRACTION", "STEER_ANGLE_SENSOR", 0),
     ("STEER_RATE", "STEER_ANGLE_SENSOR", 0),
-    ("CRUISE_ENAGED", "PCM_CRUISE_SM", 0),
+    ("CRUISE_ENGAGED", "PCM_CRUISE_SM", 0),
     ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
     ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
     ("LKA_STATE", "EPS_STATUS", 0),
@@ -151,8 +151,8 @@ class CarState(object):
 
     self.user_brake = 0
     self.v_cruise_pcm = 0
-    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENAGED']
+    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENGAGED']
     self.gas_pressed = 0
     self.low_speed_lockout = 0
-    self.brake_lights = 0
+    self.brake_lights = bool(0)
     self.generic_toggle = 0
