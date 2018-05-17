@@ -19,7 +19,7 @@ def parse_gear_shifter(can_gear, car_fingerprint):
       return "drive"
     elif can_gear == 0x4:
       return "brake"
-  elif car_fingerprint in [CAR.RAV4, CAR.RAV4H, 
+  elif car_fingerprint in [CAR.RAV4, CAR.RAV4H,
                            CAR.LEXUS_RXH, CAR.COROLLA]:
     if can_gear == 0x20:
       return "park"
@@ -40,7 +40,7 @@ def get_can_parser(CP):
   signals = [
     # sig_name, sig_address, default
     ("GEAR", "GEAR_PACKET", 0),
-    ("BRAKE_PRESSED", "BRAKE_MODULE", 0),
+    ("BRAKE_PRESSED", "BRAKE_MODULE2", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
     ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
     ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
@@ -55,43 +55,25 @@ def get_can_parser(CP):
     ("STEER_ANGLE", "STEER_ANGLE_SENSOR", 0),
     ("STEER_FRACTION", "STEER_ANGLE_SENSOR", 0),
     ("STEER_RATE", "STEER_ANGLE_SENSOR", 0),
-    ("GAS_RELEASED", "PCM_CRUISE", 0),
-    ("CRUISE_STATE", "PCM_CRUISE", 0),
-    ("MAIN_ON", "PCM_CRUISE_2", 0),
-    ("SET_SPEED", "PCM_CRUISE_2", 0),
-    ("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0),
+    ("CRUISE_ENAGED", "PCM_CRUISE_SM", 0),
     ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
     ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
     ("TURN_SIGNALS", "STEERING_LEVERS", 3),   # 3 is no blinkers
     ("LKA_STATE", "EPS_STATUS", 0),
     ("IPAS_STATE", "EPS_STATUS", 1),
-    ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
-    ("AUTO_HIGH_BEAM", "LIGHT_STALK", 0),
   ]
 
   checks = [
-    ("BRAKE_MODULE", 40),
+    ("BRAKE_MODULE2", 40),
     ("GAS_PEDAL", 33),
     ("WHEEL_SPEEDS", 80),
     ("STEER_ANGLE_SENSOR", 80),
-    ("PCM_CRUISE", 33),
-    ("PCM_CRUISE_2", 33),
     ("STEER_TORQUE_SENSOR", 50),
-    ("EPS_STATUS", 25),
   ]
 
   # this function generates lists for signal, messages and initial values
   if CP.carFingerprint == CAR.PRIUS:
-    dbc_f = 'toyota_prius_2017_pt_generated.dbc'
-    signals += [("STATE", "AUTOPARK_STATUS", 0)]
-  elif CP.carFingerprint == CAR.RAV4H:
-    dbc_f = 'toyota_rav4_hybrid_2017_pt_generated.dbc'
-  elif CP.carFingerprint == CAR.RAV4:
-    dbc_f = 'toyota_rav4_2017_pt_generated.dbc'
-  elif CP.carFingerprint == CAR.COROLLA:
-    dbc_f = 'toyota_corolla_2017_pt_generated.dbc'
-  elif CP.carFingerprint == CAR.LEXUS_RXH:
-    dbc_f = 'lexus_rx_hybrid_2017_pt_generated.dbc'
+    dbc_f = 'toyota_prius_2010_pt_generated.dbc'
 
   return CANParser(os.path.splitext(dbc_f)[0], signals, checks, 0)
 
@@ -129,7 +111,7 @@ class CarState(object):
     self.seatbelt = not cp.vl["SEATS_DOORS"]['SEATBELT_DRIVER_UNLATCHED']
 
     can_gear = cp.vl["GEAR_PACKET"]['GEAR']
-    self.brake_pressed = cp.vl["BRAKE_MODULE"]['BRAKE_PRESSED']
+    self.brake_pressed = cp.vl["BRAKE_MODULE2"]['BRAKE_PRESSED']
     self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL']
     self.car_gas = self.pedal_gas
     self.esp_disabled = cp.vl["ESP_CONTROL"]['TC_DISABLED']
@@ -153,8 +135,8 @@ class CarState(object):
 
     self.angle_steers = cp.vl["STEER_ANGLE_SENSOR"]['STEER_ANGLE'] + cp.vl["STEER_ANGLE_SENSOR"]['STEER_FRACTION']
     self.angle_steers_rate = cp.vl["STEER_ANGLE_SENSOR"]['STEER_RATE']
-    self.gear_shifter = parse_gear_shifter(can_gear, self.car_fingerprint)
-    self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
+    self.gear_shifter = "drive"
+    self.main_on = 1
     self.left_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 1
     self.right_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 2
 
@@ -162,19 +144,16 @@ class CarState(object):
     self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
     # 2 is standby, 10 is active. TODO: check that everything else is really a faulty state
     self.steer_state = cp.vl["EPS_STATUS"]['LKA_STATE']
-    self.steer_error = cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
-    self.ipas_active = cp.vl['EPS_STATUS']['IPAS_STATE'] == 3
+    self.steer_error = 0 # cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
+    self.ipas_active = 0
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']
     self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
 
     self.user_brake = 0
-    self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
-    self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
-    self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
-    self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
-    self.brake_lights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or self.brake_pressed)
-    if self.CP.carFingerprint == CAR.PRIUS:
-      self.generic_toggle = cp.vl["AUTOPARK_STATUS"]['STATE'] != 0
-    else:
-      self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
+    self.v_cruise_pcm = 0
+    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENABLED']
+    self.gas_pressed = 0
+    self.low_speed_lockout = 0
+    self.brake_lights = 0
+    self.generic_toggle = 0

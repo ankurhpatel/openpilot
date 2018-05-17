@@ -54,7 +54,7 @@ class CarInterface(object):
     ret.carName = "toyota"
     ret.carFingerprint = candidate
 
-    ret.safetyModel = car.CarParams.SafetyModels.toyota
+    ret.safetyModel = car.CarParams.SafetyModels.allOutput
 
     # pedal
     ret.enableCruise = True
@@ -82,30 +82,6 @@ class CarInterface(object):
       f = 1.43353663
       tireStiffnessFront_civic *= f
       tireStiffnessRear_civic *= f
-    elif candidate in [CAR.RAV4, CAR.RAV4H]:
-      ret.safetyParam = 73  # see conversion factor for STEER_TORQUE_EPS in dbc file
-      ret.wheelbase = 2.65
-      ret.steerRatio = 14.5 # Rav4 2017
-      ret.mass = 3650./2.205 + std_cargo  # mean between normal and hybrid
-      ret.steerKpV, ret.steerKiV = [[0.6], [0.05]]
-      ret.steerKf = 0.00006   # full torque for 10 deg at 80mph means 0.00007818594
-      ret.steerRateCost = 1.
-    elif candidate == CAR.COROLLA:
-      ret.safetyParam = 100 # see conversion factor for STEER_TORQUE_EPS in dbc file
-      ret.wheelbase = 2.70
-      ret.steerRatio = 17.8
-      ret.mass = 2860./2.205 + std_cargo  # mean between normal and hybrid
-      ret.steerKpV, ret.steerKiV = [[0.2], [0.05]]
-      ret.steerKf = 0.00003   # full torque for 20 deg at 80mph means 0.00007818594
-      ret.steerRateCost = 1.
-    elif candidate == CAR.LEXUS_RXH:
-      ret.safetyParam = 100 # see conversion factor for STEER_TORQUE_EPS in dbc file
-      ret.wheelbase = 2.79
-      ret.steerRatio = 16.  # official specs say 14.8, but it does not seem right
-      ret.mass = 4481./2.205 + std_cargo  # mean between min and max
-      ret.steerKpV, ret.steerKiV = [[0.6], [0.1]]
-      ret.steerKf = 0.00006   # full torque for 10 deg at 80mph means 0.00007818594
-      ret.steerRateCost = .8
 
     ret.centerToFront = ret.wheelbase * 0.44
 
