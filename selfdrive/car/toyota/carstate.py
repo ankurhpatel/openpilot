@@ -58,7 +58,6 @@ def get_can_parser(CP):
     ("CRUISE_ENAGED", "PCM_CRUISE_SM", 0),
     ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
     ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
-    ("TURN_SIGNALS", "STEERING_LEVERS", 3),   # 3 is no blinkers
     ("LKA_STATE", "EPS_STATUS", 0),
     ("IPAS_STATE", "EPS_STATUS", 1),
   ]
@@ -73,7 +72,7 @@ def get_can_parser(CP):
 
   # this function generates lists for signal, messages and initial values
   if CP.carFingerprint == CAR.PRIUS:
-    dbc_f = 'toyota_prius_2010_pt.dbc'
+    dbc_f = 'toyota_prius_2010_pt_generated.dbc'
 
   return CANParser(os.path.splitext(dbc_f)[0], signals, checks, 0)
 
@@ -137,23 +136,26 @@ class CarState(object):
     self.angle_steers_rate = cp.vl["STEER_ANGLE_SENSOR"]['STEER_RATE']
     self.gear_shifter = "drive"
     self.main_on = 1
-    self.left_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 1
-    self.right_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 2
+    self.left_blinker_on = 0
+    self.right_blinker_on = 0
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
     self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
     # 2 is standby, 10 is active. TODO: check that everything else is really a faulty state
     self.steer_state = cp.vl["EPS_STATUS"]['LKA_STATE']
-    self.steer_error = 0 # cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
-    self.ipas_active = 0
+    self.steer_error = cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
+    self.ipas_active = cp.vl['EPS_STATUS']['IPAS_STATE'] == 3
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']
     self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
 
     self.user_brake = 0
-    self.v_cruise_pcm = 0
-    self.pcm_acc_status = cp.vl["PCM_CRUISE_SM"]['CRUISE_ENABLED']
-    self.gas_pressed = 0
-    self.low_speed_lockout = 0
-    self.brake_lights = 0
-    self.generic_toggle = 0
+    self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+    self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
+    self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
+    self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
+    self.brake_lights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or self.brake_pressed)
+    if self.CP.carFingerprint == CAR.PRIUS:
+      self.generic_toggle = cp.vl["AUTOPARK_STATUS"]['STATE'] != 0
+    else:
+      self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
