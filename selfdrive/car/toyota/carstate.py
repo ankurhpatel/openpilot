@@ -73,7 +73,7 @@ def get_can_parser(CP):
 
   # this function generates lists for signal, messages and initial values
   if CP.carFingerprint == CAR.PRIUS:
-    dbc_f = 'toyota_prius_2010_pt_generated.dbc'
+    dbc_f = 'toyota_prius_2010_pt.dbc'
 
   return CANParser(os.path.splitext(dbc_f)[0], signals, checks, 0)
 
